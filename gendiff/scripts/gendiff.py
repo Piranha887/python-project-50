@@ -1,16 +1,13 @@
-import argparse
+#!/usr/bin/env python3
 
-
-def parse_args():
-    parser = argparse.ArgumentParser(description='Compares two configuration files and shows a difference.')
-    parser.add_argument('first_file', type=str, help='Path to the first file')
-    parser.add_argument('second_file', type=str, help='Path to the second file')
-    return parser.parse_args()
+from gendiff.generate_diff import generate_diff
+from gendiff.tools.argparse import parser_arg
 
 
 def main():
-    args = parse_args()
-    # TODO: Add your logic here
+    path_file1, path_file2, format_name = parser_arg()
+    result = generate_diff(path_file1, path_file2, format_name)
+    print(result)
 
 
 if __name__ == '__main__':
