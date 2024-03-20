@@ -1,6 +1,10 @@
 def diff(dict1, dict2):
     """Create a list of differences between two dictionaries."""
     result = []
+    if dict1 is None:
+        dict1 = {}
+    if dict2 is None:
+        dict2 = {}
     keys = set(dict1.keys()).union(dict2.keys())
     for key in sorted(keys):
         if key not in dict1:
