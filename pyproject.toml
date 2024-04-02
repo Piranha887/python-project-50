@@ -12,6 +12,7 @@ packages = [
 [tool.poetry.dependencies]
 python = "^3.10"
 PyYAML = "^6.0"
+flake8 = "^7.0.0"
 
 [tool.poetry.dev-dependencies]
 
