@@ -4,32 +4,27 @@ def stylish(diff_list):
 
 
 def get_diff_stylish(diff_list, level=0):
+    """Converts a list of differences to dictionary format. Returns string."""
     result = ['{']
-    indent = '  '
-    for i in range(level):
-        indent += '    '
-    # Отсортируем ключи в словарях перед сравнением
     for node in diff_list:
         if node['status'] == 'nested':
-            data = get_diff_stylish(node['children'], level + 1)
-            result.append(f"{indent}  {node['name']}: {data}")
-        if node['status'] == 'not changed':
-            data = format_data(node['data'], indent)
-            result.append(f"{indent}  {node['name']}: {data}")
-        if node['status'] == 'added':
-            data = format_data(node['data'], indent)
-            result.append(f"{indent}+ {node['name']}: {data}")
-        if node['status'] == 'deleted':
-            data = format_data(node['data'], indent)
-            result.append(f"{indent}- {node['name']}: {data}")
-        if node['status'] == 'changed':
-            if 'data before' in node:
-                data_before = format_data(node['data before'], indent)
-                result.append(f"{indent}- {node['name']}: {data_before}")
-            if 'data after' in node:
-                data_after = format_data(node['data after'], indent)
-                result.append(f"{indent}+ {node['name']}: {data_after}")
-    result.append(indent[:-2] + '}')
+            data = stylish(node['children'])
+            result.append(f"  {node['name']}: {data}")
+        elif node['status'] == 'not changed':
+            data = format_data(node['data'])
+            result.append(f"    {node['name']}: {data}")
+        elif node['status'] == 'added':
+            data = format_data(node['data'])
+            result.append(f"  + {node['name']}: {data}")
+        elif node['status'] == 'deleted':
+            data = format_data(node['data'])
+            result.append(f"  - {node['name']}: {data}")
+        elif node['status'] == 'changed':
+            data_before = format_data(node['data before'])
+            data_after = format_data(node['data after'])
+            result.append(f"  - {node['name']}: {data_before}")
+            result.append(f"  + {node['name']}: {data_after}")
+    result.append('}')
     return '\n'.join(result)
 
 

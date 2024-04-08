@@ -13,8 +13,5 @@ def parser_arg():
     parser.add_argument('-f', '--format', default='stylish',
                         help='output format (default: "stylish")')
 
-    # Change the title of optional arguments
-    parser._optionals.title = 'optional arguments'
-
     args = parser.parse_args()
     return args.first_file, args.second_file, args.format
