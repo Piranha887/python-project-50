@@ -1,0 +1,37 @@
+name: Python CI
+
+on:
+  - push
+  - pull_request
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.12.2'
+          cache: 'pip'
+
+
+      - name: Install dependencies & check types
+        run: |
+          pip install poetry
+          poetry install
+          poetry run mypy .
+
+
+      - name: Check linting
+        run: make lint
+
+
+      - name: Test & publish code coverage
+        uses: paambaati/codeclimate-action@v5.0.0
+        env:
+          CC_TEST_REPORTER_ID: ${{ secrets.CC_TEST_REPORTER_ID }}
+        with:
+          coverageCommand: make test-coverage
+          debug: true

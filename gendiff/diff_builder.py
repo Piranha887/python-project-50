@@ -1,20 +1,66 @@
-def create_diff(data1, data2):
-    """Create a list of differences between two dictionaries."""
+from gendiff.constants import DIFF_CHANGE_TYPES
+
+
+def create_difference_tree(data1, data2):
+    keys = sorted(set(data1.keys()) | set(data2.keys()))
     result = {}
-    if data1 is None:
-        data1 = {}
-    if data2 is None:
-        data2 = {}
-    keys = sorted(data1.keys() | data2.keys())
     for key in keys:
         if key not in data2:
-            result[key] = {'status': 'deleted', 'name': key, 'data': data1[key]}
-        elif data1[key] != data2[key]:
-            if isinstance(data1[key], dict) and isinstance(data2[key], dict):
-                result[key] = {'status': 'nested', 'name': key, 'children': create_diff(data1[key], data2[key])}
-            else:
-                result[key] = {'status': 'changed', 'name': key, 'data before': data1[key], 'data after': data2[key]}
+            result[key] = {
+                'type': DIFF_CHANGE_TYPES.DELETED,
+                'value': data1[key]
+            }
         elif key not in data1:
-            result[key] = {'status': 'added', 'name': key, 'data': data2[key]}
-    return result
+            result[key] = {
+                'type': DIFF_CHANGE_TYPES.ADDED,
+                'value': data2[key]
+            }
 
+        elif isinstance(data1[key], dict) and isinstance(data2[key], dict):
+            result[key] = {
+                'type': DIFF_CHANGE_TYPES.NESTED,
+                'children': create_difference_tree(data1[key], data2[key]),
+            }
+
+        elif isinstance(data1[key], list) and isinstance(data2[key], list):
+            children = []
+            for i in range(max(len(data1[key]), len(data2[key]))):
+                if i >= len(data1[key]):
+                    children.append({
+                        'type': DIFF_CHANGE_TYPES.ADDED,
+                        'value': data2[key][i]
+                    })
+                elif i >= len(data2[key]):
+                    children.append({
+                        'type': DIFF_CHANGE_TYPES.DELETED,
+                        'value': data1[key][i]
+                    })
+                elif data1[key][i] != data2[key][i]:
+                    children.append({
+                        'type': DIFF_CHANGE_TYPES.MODIFIED,
+                        'old_value': data1[key][i],
+                        'new_value': data2[key][i]
+                    })
+                else:
+                    children.append({
+                        'type': DIFF_CHANGE_TYPES.UNCHANGED,
+                        'value': data1[key][i]
+                    })
+            result[key] = {
+                'type': DIFF_CHANGE_TYPES.NESTED,
+                'children': children
+            }
+
+        elif data1[key] != data2[key]:
+            result[key] = {
+                'type': DIFF_CHANGE_TYPES.MODIFIED,
+                'old_value': data1[key],
+                'new_value': data2[key]
+            }
+        else:
+            result[key] = {
+                'type': DIFF_CHANGE_TYPES.UNCHANGED,
+                'value': data1[key]
+            }
+
+    return result
