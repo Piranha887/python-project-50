@@ -13,4 +13,5 @@ def format_diff(diff, formatter):
         case STYLE_FORMAT_CHOICES.JSON:
             return format_json(diff)
 
-    raise ValueError(f'Unsupported formatter: {formatter}')
+    raise Exception("Inexistent output formatter, please use 'plain', "
+                    "'stylish' or none which equals to 'stylish'")
