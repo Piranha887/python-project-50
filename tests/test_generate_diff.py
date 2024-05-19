@@ -1,27 +1,67 @@
+import json
+
 import pytest
 from gendiff import generate_diff
-import os
+import difflib
+
+JSON_FLAT_OLD = 'tests/fixtures/file1.json'
+JSON_FLAT_NEW = 'tests/fixtures/file2.json'
+YML_FLAT_OLD = 'tests/fixtures/file1.yml'
+YML_FLAT_NEW = 'tests/fixtures/file2.yml'
+STYLISH_FLAT_RESULT = 'tests/fixtures/right_answer_stylish.json'
+PLAIN_FLAT_RESULT = 'tests/fixtures/right_answer_plain.txt'
+JSON_FLAT_RESULT = 'tests/fixtures/right_answer_json.json'
 
 
-def get_fixtures_path(file_name):
-    current_dir = os.path.dirname(__file__)
-    return os.path.join(current_dir, 'fixtures', file_name)
+@pytest.fixture
+def get_result():
+    def _get_result(format):
+        with open(format, 'r') as result:
+            expected = result.read()
+        return expected
+
+    return _get_result
 
 
-def get_data(expected_result):
-    with open(get_fixtures_path(expected_result), "r") as correct:
-        return correct.read()
+def normalize_output(output):
+    return '\n'.join(line.rstrip() for line in output.splitlines() if line.strip())
 
 
-@pytest.mark.parametrize("file1, file2", [
-    ('file1.json', 'file2.json'),
-    ('file1.yml', 'file2.yml')
-])
-def test_generate_diff(file1, file2):
-    path1 = get_fixtures_path(file1)
-    path2 = get_fixtures_path(file2)
+def test_exception():
+    with pytest.raises(Exception) as exc_info:
+        generate_diff(JSON_FLAT_OLD, JSON_FLAT_NEW, 'wrong_formatter')
+    assert str(exc_info.value) == "Inexistent output formatter, please use 'plain', " \
+                                  "'stylish' or none which equals to 'stylish'"
 
-    assert generate_diff(path1, path2, 'stylish') == get_data('right_answer_stylish.txt')
-    assert generate_diff(path1, path2, 'plain') == get_data('right_answer_plain.txt')
-    assert generate_diff(path1, path2, 'json') == get_data('right_answer_json.json')
-    assert generate_diff(path1, path2) == get_data('right_answer_stylish.txt')
+
+def test_generate_diff_plain(get_result):
+    assert generate_diff(JSON_FLAT_OLD, JSON_FLAT_NEW, 'plain') == get_result(PLAIN_FLAT_RESULT)
+    assert generate_diff(YML_FLAT_OLD, YML_FLAT_NEW, 'plain') == get_result(PLAIN_FLAT_RESULT)
+
+
+def test_generate_diff_stylish(get_result):
+    result = generate_diff(JSON_FLAT_OLD, JSON_FLAT_NEW, 'stylish')
+    expected = get_result(STYLISH_FLAT_RESULT)
+
+    if normalize_output(result) != normalize_output(expected):
+        print("Differences:")
+        for line in difflib.unified_diff(result.splitlines(), expected.splitlines(), fromfile='result',
+                                         tofile='expected'):
+            print(line)
+
+    assert normalize_output(result) == normalize_output(expected)
+
+def test_generate_diff_json(get_result):
+    result = generate_diff(JSON_FLAT_OLD, JSON_FLAT_NEW, 'json')
+    expected = get_result(JSON_FLAT_RESULT)
+
+    if normalize_output(result) != normalize_output(expected):
+        print("Differences:")
+        for line in difflib.unified_diff(result.splitlines(), expected.splitlines(), fromfile='result',
+                                         tofile='expected'):
+            print(line)
+
+    assert normalize_output(result) == normalize_output(expected)
+
+
+

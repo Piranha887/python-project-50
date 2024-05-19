@@ -1,48 +1,42 @@
 def to_str(value):
-    if value is None:
-        return 'null'
-    elif isinstance(value, (list, dict)):
-        return '[complex value]'
+    if isinstance(value, dict):
+        result = '[complex value]'
     elif isinstance(value, bool):
-        return str(value).lower()
-    elif isinstance(value, str):
-        return f"'{value}'"
+        result = str(value).lower()
+    elif value == 0:
+        result = value
+    elif value is None:
+        result = 'null'
     else:
-        return value
+        result = f"'{value}'"
+    return result
+
+
+def build_plain_string(status, path, value):
+    if status == 'removed':
+        return f"Property '{'.'.join(path)}' was removed" + '\n'
+    elif status == 'added':
+        return f"Property '{'.'.join(path)}' was added with value: " \
+               f"{to_str(value)}" + '\n'
+    elif status == 'changed':
+        return f"Property '{'.'.join(path)}' was updated. " \
+               f"From {to_str(value['old'])} " \
+               f"to {to_str(value['new'])}" + '\n'
+    else:
+        return ''
 
 
 def convert_to_plain_text(diff):
-    def _iter(diff, path=''):
-        res = []
-        for key, data in diff.items():
-            current_path = f'{path}.{key}' if path else key
-            match data['type']:
-                case 'added':
-                    value = to_str(data['value'])
-                    res.append(
-                        f"Property '{current_path}' "
-                        f"was added with value: {value}"
-                    )
-                case 'deleted':
-                    res.append(f"Property '{current_path}' was removed")
+    def walk(diff, path, result):
+        for key in diff:
+            path.append(key)
+            if not diff[key].get('status'):
+                result = walk(diff[key], path, result)
+            else:
+                status = diff[key].get('status')
+                value = diff[key]['value']
+                result += str(build_plain_string(status, path, value))
+            path.pop()
+        return result
 
-                case 'modified':
-                    new_value = to_str(data['new_value'])
-                    old_value = to_str(data['old_value'])
-                    res.append(
-                        f"Property '{current_path}' was updated. "
-                        f"From {old_value} to {new_value}"
-                    )
-                case 'nested':
-                    children = data['children']
-                    res.extend(_iter(children, current_path))
-
-                case 'unchanged':
-                    continue
-
-                case _:
-                    raise ValueError(f'Unsupported node type at {current_path}')
-
-        return res
-
-    return '\n'.join(_iter(diff))
+    return walk(diff, [], '').rstrip('\n')
