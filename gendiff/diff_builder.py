@@ -10,7 +10,7 @@ def create_difference_tree(old_data, new_data, diff={}):
         elif new_data[key] == old_data[key]:
             diff[key] = {'value': new_data[key],
                          'status': 'unchanged'}
-        elif type(old_data[key]) == dict and type(new_data[key]) == dict:
+        elif type(old_data[key]) is dict and type(new_data[key]) is dict:
             diff[key] = {}
             create_difference_tree(old_data[key], new_data[key], diff[key])
         else:

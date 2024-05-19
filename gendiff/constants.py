@@ -4,7 +4,8 @@ _STYLE_FORMAT_VALUES = ('stylish', 'plain', 'json')
 STYLE_FORMAT_CHOICES = (namedtuple('StyleFormatChoices',
                                    map(str.upper, _STYLE_FORMAT_VALUES))(*_STYLE_FORMAT_VALUES))  # noqa
 
-_DIFF_CHANGE_TYPES_VALUES = ('deleted', 'added', 'nested', 'modified', 'unchanged')
+_DIFF_CHANGE_TYPES_VALUES = \
+    ('deleted', 'added', 'nested', 'modified', 'unchanged')
 DIFF_CHANGE_TYPES = (namedtuple('DiffChangeTypes',
                                 map(str.upper, _DIFF_CHANGE_TYPES_VALUES))(*_DIFF_CHANGE_TYPES_VALUES))  # noqa
 
